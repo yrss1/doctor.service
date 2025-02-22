@@ -1,7 +1,7 @@
 package doctor
 
 type Request struct {
-	ID           int      `json:"id"`
+	ID           string   `json:"id"`
 	Name         *string  `json:"name"`
 	Specialty    *string  `json:"specialty"`
 	Experience   *int     `json:"experience"`
@@ -18,7 +18,7 @@ type Request struct {
 }
 
 type Response struct {
-	ID           int     `json:"id"`
+	ID           string  `json:"id"`
 	Name         string  `json:"name"`
 	Specialty    string  `json:"specialty"`
 	Experience   int     `json:"experience"`
@@ -36,20 +36,17 @@ type Response struct {
 
 func ParseFromEntity(data Entity) (res Response) {
 	res = Response{
-		ID:           data.ID,
-		Name:         *data.Name,
-		Specialty:    *data.Specialty,
-		Experience:   *data.Experience,
-		Price:        *data.Price,
-		Address:      *data.Address,
-		ClinicName:   *data.ClinicName,
-		Phone:        *data.Phone,
-		Email:        *data.Email,
-		PhotoURL:     *data.PhotoURL,
-		Education:    *data.Education,
-		Rating:       *data.Rating,
-		ReviewsCount: *data.ReviewsCount,
-		IsActive:     *data.IsActive,
+		ID:         data.ID,
+		Name:       *data.Name,
+		Specialty:  *data.Specialty,
+		Experience: *data.Experience,
+		Price:      *data.Price,
+		Address:    *data.Address,
+		ClinicName: *data.ClinicName,
+		Phone:      *data.Phone,
+		Email:      *data.Email,
+		PhotoURL:   *data.PhotoURL,
+		Education:  *data.Education,
 	}
 
 	return

@@ -1,7 +1,7 @@
 package doctor
 
 type Entity struct {
-	ID           int      `json:"id"`
+	ID           string   `json:"id"`
 	Name         *string  `json:"name"`
 	Specialty    *string  `json:"specialty"`
 	Experience   *int     `json:"experience"`
