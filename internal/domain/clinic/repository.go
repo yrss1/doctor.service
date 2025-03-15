@@ -1,6 +1,8 @@
-package doctor
+package clinic
 
-import "context"
+import (
+	"context"
+)
 
 type Repository interface {
 	List(ctx context.Context) (dest []Entity, err error)

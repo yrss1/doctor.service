@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"github.com/yrss1/doctor.service/internal/domain/clinic"
 
 	"github.com/yrss1/doctor.service/internal/domain/doctor"
 	"github.com/yrss1/doctor.service/internal/repository/postgres"
@@ -14,6 +15,7 @@ type Repository struct {
 	postgres store.SQLX
 
 	Doctor doctor.Repository
+	Clinic clinic.Repository
 }
 
 func New(configs ...Configuration) (s *Repository, err error) {
@@ -39,6 +41,7 @@ func WithPostgresStore(dbName string) Configuration {
 		// }
 
 		r.Doctor = postgres.NewDoctorRepository(r.postgres.Client)
+		r.Clinic = postgres.NewClinicRepository(r.postgres.Client)
 		return
 	}
 }

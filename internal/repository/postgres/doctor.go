@@ -22,8 +22,7 @@ func NewDoctorRepository(db *sqlx.DB) *DoctorRepository {
 func (r *DoctorRepository) List(ctx context.Context) (dest []doctor.Entity, err error) {
 	query := `
 		SELECT 
-			id, name, specialty, experience, price, address, clinic_name, 
-			phone, email, photo_url, education, rating, reviews_count, is_active
+			id, name, specialization, experience, price, rating, address, phone, clinic_id
 		FROM doctors;
 		`
 
@@ -36,27 +35,60 @@ func (r *DoctorRepository) Add(ctx context.Context, data doctor.Entity) (id stri
 	query :=
 		`
 	INSERT INTO doctors (
-		name, specialty, experience, price, address, clinic_name, 
-		phone, email, photo_url, education
+		name, specialization, experience, price, rating, address, phone, clinic_id
 	) VALUES (
 		$1, $2, $3, $4, $5, $6, 
-		$7, $8, $9, $10
+		$7, $8
 	) RETURNING id;
 
 	`
 
 	args := []any{
 		data.Name,
-		data.Specialty,
+		data.Specialization,
 		data.Experience,
 		data.Price,
+		data.Rating,
 		data.Address,
-		data.ClinicName,
 		data.Phone,
-		data.Email,
-		data.PhotoURL,
-		data.Education,
+		data.ClinicID,
 	}
+
+	if err = r.db.QueryRowContext(ctx, query, args...).Scan(&id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = store.ErrorNotFound
+		}
+	}
+
+	return
+}
+
+func (r *DoctorRepository) Get(ctx context.Context, id string) (dest doctor.Entity, err error) {
+	query := `
+	SELECT 
+		id, name, specialization, experience, price, rating, address, phone, clinic_id
+	FROM doctors
+	WHERE id = $1;
+	`
+	args := []any{id}
+
+	if err = r.db.GetContext(ctx, &dest, query, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = store.ErrorNotFound
+		}
+	}
+
+	return
+}
+
+func (r *DoctorRepository) Delete(ctx context.Context, id string) (err error) {
+	query := `
+	DELETE FROM doctors 
+	WHERE id = $1;
+	RETURNING id;
+	`
+
+	args := []any{id}
 
 	if err = r.db.QueryRowContext(ctx, query, args...).Scan(&id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -1,52 +1,40 @@
 package doctor
 
 type Request struct {
-	ID           string   `json:"id"`
-	Name         *string  `json:"name"`
-	Specialty    *string  `json:"specialty"`
-	Experience   *int     `json:"experience"`
-	Price        *float64 `json:"price"`
-	Address      *string  `json:"address"`
-	ClinicName   *string  `json:"clinic_name"`
-	Phone        *string  `json:"phone"`
-	Email        *string  `json:"email"`
-	PhotoURL     *string  `json:"photo_url"`
-	Education    *string  `json:"education"`
-	Rating       *float64 `json:"rating"`
-	ReviewsCount *int     `json:"reviews_count"`
-	IsActive     *bool    `json:"is_active"`
+	ID             string   `json:"id"`
+	Name           *string  `json:"name"`
+	Specialization *string  `json:"specialization"`
+	Experience     *string  `json:"experience"`
+	Price          *string  `json:"price"`
+	Rating         *float64 `json:"rating"`
+	Address        *string  `json:"address"`
+	Phone          *string  `json:"phone"`
+	ClinicID       *string  `json:"clinic_id"`
 }
 
 type Response struct {
-	ID           string  `json:"id"`
-	Name         string  `json:"name"`
-	Specialty    string  `json:"specialty"`
-	Experience   int     `json:"experience"`
-	Price        float64 `json:"price"`
-	Address      string  `json:"address"`
-	ClinicName   string  `json:"clinic_name"`
-	Phone        string  `json:"phone"`
-	Email        string  `json:"email"`
-	PhotoURL     string  `json:"photo_url"`
-	Education    string  `json:"education"`
-	Rating       float64 `json:"rating"`
-	ReviewsCount int     `json:"reviews_count"`
-	IsActive     bool    `json:"is_active"`
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	Specialization string  `json:"specialization"`
+	Experience     string  `json:"experience"`
+	Price          string  `json:"price"`
+	Rating         float64 `json:"rating"`
+	Address        string  `json:"address"`
+	Phone          string  `json:"phone"`
+	ClinicID       string  `json:"clinic_id"`
 }
 
 func ParseFromEntity(data Entity) (res Response) {
 	res = Response{
-		ID:         data.ID,
-		Name:       *data.Name,
-		Specialty:  *data.Specialty,
-		Experience: *data.Experience,
-		Price:      *data.Price,
-		Address:    *data.Address,
-		ClinicName: *data.ClinicName,
-		Phone:      *data.Phone,
-		Email:      *data.Email,
-		PhotoURL:   *data.PhotoURL,
-		Education:  *data.Education,
+		ID:             data.ID,
+		Name:           *data.Name,
+		Specialization: *data.Specialization,
+		Experience:     *data.Experience,
+		Price:          *data.Price,
+		Rating:         *data.Rating,
+		Address:        *data.Address,
+		Phone:          *data.Phone,
+		ClinicID:       *data.ClinicID,
 	}
 
 	return

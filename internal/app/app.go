@@ -2,10 +2,8 @@ package app
 
 import (
 	"context"
-	"flag"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -35,6 +33,7 @@ func Run() {
 
 	doctorService, err := doctorService.New(
 		doctorService.WithDoctorRepository(repositories.Doctor),
+		doctorService.WithClinicRepository(repositories.Clinic),
 	)
 	if err != nil {
 		logger.Error("ERR_INIT_DOCTOR_SERVICE", zap.Error(err))
@@ -60,39 +59,31 @@ func Run() {
 		return
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := servers.Run(); err != nil {
-			logger.Error("ERR_RUN_SERVERS", zap.Error(err))
-		}
-	}()
-
-	logger.Info("HTTP server started on http://localhost:" + configs.APP.Port + "/swagger/index.html")
-
-	var wait time.Duration
-	flag.DurationVar(&wait, "graceful-timeout", 15*time.Second, "The duration for which the server will wait for existing connections to finish before shutting down")
-	flag.Parse()
-
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
-	<-quit
-	logger.Info("Shutdown initiated...")
+	logger.Info("HTTP server started on http://localhost:" + configs.APP.Port + "/swagger/index.html")
 
-	ctx, cancel := context.WithTimeout(context.Background(), wait)
-	defer cancel()
-
-	wg.Add(1)
+	errChan := make(chan error, 1)
 	go func() {
-		defer wg.Done()
-		if err := servers.Stop(ctx); err != nil {
-			logger.Error("ERR_SHUTDOWN_SERVERS", zap.Error(err))
-		}
+		errChan <- servers.Run()
 	}()
 
-	wg.Wait()
+	select {
+	case <-quit:
+		logger.Info("Shutdown initiated...")
+	case err := <-errChan:
+		if err != nil {
+			logger.Error("ERR_RUN_SERVERS", zap.Error(err))
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := servers.Stop(ctx); err != nil {
+		logger.Error("ERR_SHUTDOWN_SERVERS", zap.Error(err))
+	}
 
 	logger.Info("All services stopped. Exiting.")
 }

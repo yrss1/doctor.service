@@ -24,17 +24,22 @@ func New(configs ...Configuration) (r *Server, err error) {
 	return
 }
 
-func (s *Server) Run() (err error) {
+func (s *Server) Run() error {
 	if s.http != nil {
+		errChan := make(chan error, 1)
 		go func() {
-			if err = s.http.ListenAndServe(); err != nil {
-				fmt.Printf("ERR_SERVE_HTTP: %v\n", err)
-				return
-			}
+			errChan <- s.http.ListenAndServe()
 		}()
-	}
 
-	return
+		select {
+		case err := <-errChan:
+			if err != http.ErrServerClosed {
+				fmt.Printf("ERR_SERVE_HTTP: %v\n", err)
+				return err
+			}
+		}
+	}
+	return nil
 }
 func (s *Server) Stop(ctx context.Context) (err error) {
 	if s.http != nil {
