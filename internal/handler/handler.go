@@ -59,6 +59,8 @@ func WithHTTPHandler() Configuration {
 			doctorHandler.Routes(api)
 			clinicHandler.Routes(api)
 		}
+
+		api.GET("/health")
 		return
 	}
 }

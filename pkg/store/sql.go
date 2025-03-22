@@ -19,6 +19,5 @@ func New(dbSource string) (store SQLX, err error) {
 	}
 	store.Client.SetMaxOpenConns(20)
 	store.Client.SetMaxIdleConns(10)
-
 	return
 }

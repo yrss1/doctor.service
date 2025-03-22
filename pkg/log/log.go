@@ -43,7 +43,7 @@ func New() *zap.Logger {
 	cfg.EncoderConfig.TimeKey = "timestamp"
 	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-	cfg.OutputPaths = []string{"stdout", "service.log"}
+	//cfg.OutputPaths = []string{"stdout", "service.log"}
 
 	log, err := cfg.Build(zap.WrapCore((&apmzap.Core{FatalFlushTimeout: 10000}).WrapCore))
 	if err != nil {
