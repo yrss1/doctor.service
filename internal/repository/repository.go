@@ -2,7 +2,9 @@ package repository
 
 import (
 	"fmt"
+	"github.com/yrss1/doctor.service/internal/domain/appointment"
 	"github.com/yrss1/doctor.service/internal/domain/clinic"
+	"github.com/yrss1/doctor.service/internal/domain/review"
 	"github.com/yrss1/doctor.service/internal/domain/schedule"
 
 	"github.com/yrss1/doctor.service/internal/domain/doctor"
@@ -15,9 +17,11 @@ type Configuration func(r *Repository) error
 type Repository struct {
 	postgres store.SQLX
 
-	Doctor   doctor.Repository
-	Clinic   clinic.Repository
-	Schedule schedule.Repository
+	Doctor      doctor.Repository
+	Clinic      clinic.Repository
+	Schedule    schedule.Repository
+	Appointment appointment.Repository
+	Review      review.Repository
 }
 
 func New(configs ...Configuration) (s *Repository, err error) {
@@ -45,6 +49,8 @@ func WithPostgresStore(dbName string) Configuration {
 		r.Doctor = postgres.NewDoctorRepository(r.postgres.Client)
 		r.Clinic = postgres.NewClinicRepository(r.postgres.Client)
 		r.Schedule = postgres.NewScheduleRepository(r.postgres.Client)
+		r.Appointment = postgres.NewAppointmentRepository(r.postgres.Client)
+		r.Review = postgres.NewReviewRepository(r.postgres.Client)
 
 		return
 	}

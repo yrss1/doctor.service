@@ -54,12 +54,16 @@ func WithHTTPHandler() Configuration {
 		doctorHandler := http.NewDoctorHandler(h.dependencies.DoctorService)
 		clinicHandler := http.NewClinicHandler(h.dependencies.DoctorService)
 		scheduleHandler := http.NewScheduleHandler(h.dependencies.DoctorService)
+		appointmentHandler := http.NewAppointmentHandler(h.dependencies.DoctorService)
+		reviewHandler := http.NewReviewHandler(h.dependencies.DoctorService)
 
 		api := h.HTTP.Group("/api/v1")
 		{
 			doctorHandler.Routes(api)
 			clinicHandler.Routes(api)
 			scheduleHandler.Routes(api)
+			appointmentHandler.Routes(api)
+			reviewHandler.Routes(api)
 		}
 		api.GET("/health")
 

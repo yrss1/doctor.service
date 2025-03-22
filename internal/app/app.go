@@ -35,6 +35,8 @@ func Run() {
 		doctorService.WithDoctorRepository(repositories.Doctor),
 		doctorService.WithClinicRepository(repositories.Clinic),
 		doctorService.WithScheduleRepository(repositories.Schedule),
+		doctorService.WithAppointmentRepository(repositories.Appointment),
+		doctorService.WithReviewRepository(repositories.Review),
 	)
 	if err != nil {
 		logger.Error("ERR_INIT_DOCTOR_SERVICE", zap.Error(err))
