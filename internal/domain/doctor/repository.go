@@ -3,8 +3,8 @@ package doctor
 import "context"
 
 type Repository interface {
-	List(ctx context.Context) (dest []Entity, err error)
-	Add(ctx context.Context, doctor Entity) (id string, err error)
-	Get(ctx context.Context, id string) (dest Entity, err error)
+	ListWithSchedules(ctx context.Context) (dest []Entity, err error)
+	GetWithSchedules(ctx context.Context, id string) (Entity, error)
 	Delete(ctx context.Context, id string) (err error)
+	SearchWithSchedules(ctx context.Context, filter Entity) ([]Entity, error)
 }

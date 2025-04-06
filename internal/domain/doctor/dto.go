@@ -9,32 +9,34 @@ type Request struct {
 	Rating         *float64 `json:"rating"`
 	Address        *string  `json:"address"`
 	Phone          *string  `json:"phone"`
-	ClinicID       *string  `json:"clinic_id"`
+	ClinicName     *string  `json:"clinid_name"`
 }
 
 type Response struct {
-	ID             string  `json:"id"`
-	Name           string  `json:"name"`
-	Specialization string  `json:"specialization"`
-	Experience     string  `json:"experience"`
-	Price          string  `json:"price"`
-	Rating         float64 `json:"rating"`
-	Address        string  `json:"address"`
-	Phone          string  `json:"phone"`
-	ClinicID       string  `json:"clinic_id"`
+	ID                 string         `json:"id"`
+	Name               string         `json:"name"`
+	Specialization     string         `json:"specialization"`
+	Experience         string         `json:"experience"`
+	Price              string         `json:"price"`
+	Rating             float64        `json:"rating"`
+	Address            string         `json:"address"`
+	Phone              string         `json:"phone"`
+	ClinicName         string         `json:"clinid_name"`
+	AvailableSchedules []ScheduleSlot `json:"available_schedules"`
 }
 
 func ParseFromEntity(data Entity) (res Response) {
 	res = Response{
-		ID:             data.ID,
-		Name:           *data.Name,
-		Specialization: *data.Specialization,
-		Experience:     *data.Experience,
-		Price:          *data.Price,
-		Rating:         *data.Rating,
-		Address:        *data.Address,
-		Phone:          *data.Phone,
-		ClinicID:       *data.ClinicID,
+		ID:                 data.ID,
+		Name:               *data.Name,
+		Specialization:     *data.Specialization,
+		Experience:         *data.Experience,
+		Price:              *data.Price,
+		Rating:             *data.Rating,
+		Address:            *data.Address,
+		Phone:              *data.Phone,
+		ClinicName:         *data.ClinicName,
+		AvailableSchedules: data.AvailableSchedules,
 	}
 
 	return

@@ -1,6 +1,8 @@
 package schedule
 
-import "time"
+import (
+	"time"
+)
 
 type Entity struct {
 	ID          string     `json:"id" db:"id"`

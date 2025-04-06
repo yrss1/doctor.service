@@ -2,6 +2,7 @@ package doctorService
 
 import (
 	"context"
+
 	"github.com/yrss1/doctor.service/internal/domain/appointment"
 	"github.com/yrss1/doctor.service/pkg/log"
 	"go.uber.org/zap"
@@ -56,12 +57,24 @@ func (s *Service) GetAppointmentByID(ctx context.Context, id string) (res appoin
 	return
 }
 
-func (s *Service) DeleteAppointmentByID(ctx context.Context, id string) (err error) {
-	logger := log.LoggerFromContext(ctx).Named("DeleteAppointmentByID")
+func (s *Service) CancelAppointmentByID(ctx context.Context, id string) (err error) {
+	logger := log.LoggerFromContext(ctx).Named("CancelAppointmentByID")
 
-	err = s.appointmentRepository.Delete(ctx, id)
+	err = s.appointmentRepository.Cancel(ctx, id)
 	if err != nil {
 		logger.Error("failed to delete by id", zap.Error(err))
+	}
+
+	return
+}
+
+func (s *Service) ListAppointmentsByUserID(ctx context.Context, id string) (data []appointment.EntityView, err error) {
+	logger := log.LoggerFromContext(ctx).Named("ListAppointmentByUserID")
+
+	data, err = s.appointmentRepository.ListByUserID(ctx, id)
+	if err != nil {
+		logger.Error("failed to select", zap.Error(err))
+		return
 	}
 
 	return

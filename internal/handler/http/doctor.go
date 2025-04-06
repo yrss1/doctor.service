@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+
 	"github.com/yrss1/doctor.service/internal/domain/doctor"
 	"github.com/yrss1/doctor.service/internal/service/doctorService"
 	"github.com/yrss1/doctor.service/pkg/server/response"
@@ -23,32 +24,15 @@ func NewDoctorHandler(doctorService doctorService.Service) *DoctorHandler {
 func (h *DoctorHandler) Routes(r *gin.RouterGroup) {
 	api := r.Group("/doctors")
 	{
-		api.GET("/", h.list)
-		api.POST("/", h.add)
+		api.GET("/", h.listWithSchedules)
 		api.GET("/:id", h.get)
 		api.DELETE("/:id", h.delete)
+		api.GET("/search", h.search)
 	}
 }
 
-func (h *DoctorHandler) list(c *gin.Context) {
-	res, err := h.doctorService.ListDoctor(c)
-	if err != nil {
-		response.InternalServerError(c, err)
-		return
-	}
-
-	response.OK(c, res)
-}
-
-func (h *DoctorHandler) add(c *gin.Context) {
-	req := doctor.Request{}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err, req)
-		return
-	}
-
-	res, err := h.doctorService.CreateDoctor(c, req)
+func (h *DoctorHandler) listWithSchedules(c *gin.Context) {
+	res, err := h.doctorService.ListDoctorWithSchedules(c)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -60,7 +44,7 @@ func (h *DoctorHandler) add(c *gin.Context) {
 func (h *DoctorHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.GetDoctorByID(c, id)
+	res, err := h.doctorService.GetDoctorByIDWtihSchedules(c, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -86,4 +70,24 @@ func (h *DoctorHandler) delete(c *gin.Context) {
 		}
 		return
 	}
+}
+
+func (h *DoctorHandler) search(c *gin.Context) {
+	req := doctor.Request{
+		Name:           ptr(c.Query("name")),
+		Specialization: ptr(c.Query("specialization")),
+		ClinicName:     ptr(c.Query("clinic_name")),
+	}
+
+	res, err := h.doctorService.SearchWithSchedules(c, req)
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, res)
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

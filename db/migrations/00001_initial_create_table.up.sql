@@ -1,92 +1,108 @@
-DO $$
-    BEGIN
-        -- EXTENSIONS --
-        CREATE EXTENSION IF NOT EXISTS pgcrypto;
+package main
 
-        -- SEQUENCES --
-        CREATE SEQUENCE IF NOT EXISTS appointment_id_seq
-            START WITH 99999999
-            INCREMENT BY 1;
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"time"
 
-        -- TABLES --
-        CREATE TABLE IF NOT EXISTS clinic (
-                                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                              name VARCHAR(100) NOT NULL,
-                                              address TEXT NOT NULL,
-                                              phone VARCHAR(20),
-                                              UNIQUE (name, address),
-                                              UNIQUE (phone)
-        );
+	_ "github.com/lib/pq"
+)
 
-        CREATE TABLE IF NOT EXISTS doctors (
-                                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                               name VARCHAR(100) NOT NULL,
-                                               specialization VARCHAR(100) NOT NULL,
-                                               experience INT CHECK (experience >= 0) NOT NULL,
-                                               price DECIMAL(10,2) NOT NULL,
-                                               rating DECIMAL(3,2) DEFAULT 0.0 NOT NULL CHECK (rating BETWEEN 0 AND 5),
-                                               address TEXT NOT NULL,
-                                               phone VARCHAR(20) NOT NULL UNIQUE,
-                                               clinic_id UUID REFERENCES clinic(id) ON DELETE SET NULL
-        );
+const (
+	postgresDSN = "your-dsn-here" // Replace with your real DSN
+)
 
-        CREATE TABLE IF NOT EXISTS schedule (
-                                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                                doctor_id UUID NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
-                                                slot_start TIMESTAMP NOT NULL,
-                                                slot_end TIMESTAMP NOT NULL,
-                                                is_available BOOLEAN DEFAULT TRUE,
-                                                CHECK (slot_end > slot_start),
-                                                UNIQUE (doctor_id, slot_start, slot_end)
-        );
+func main() {
+	db, err := sql.Open("postgres", postgresDSN)
+	if err != nil {
+		log.Fatalf("Failed to connect to DB: %v", err)
+	}
+	defer db.Close()
 
-        CREATE TABLE IF NOT EXISTS appointments (
-                                                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                    id BIGINT PRIMARY KEY DEFAULT nextval('appointment_id_seq'),
-                                                    doctor_id UUID NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
-                                                    user_id UUID NOT NULL, -- ID пользователя из внешнего сервиса
-                                                    schedule_id UUID NOT NULL REFERENCES schedule(id) ON DELETE CASCADE,
-                                                    status VARCHAR(10) NOT NULL CHECK (status IN ('active', 'canceled', 'completed')),
-                                                    UNIQUE (schedule_id, user_id)
-        );
+	doctorIDs, err := getAllDoctorIDs(db)
+	if err != nil {
+		log.Fatalf("Failed to get doctor IDs: %v", err)
+	}
 
-        CREATE TABLE IF NOT EXISTS reviews (
-                                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                               doctor_id UUID NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
-                                               user_id UUID NOT NULL, -- ID пользователя из внешнего сервиса
-                                               rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-                                               comment TEXT
-        );
+	err = generateSchedules(db, doctorIDs)
+	if err != nil {
+		log.Fatalf("Failed to generate schedules: %v", err)
+	}
 
-        -- DATA --
-        INSERT INTO clinic (name, address, phone) VALUES
-                                                      ('City Hospital', '123 Main St, Springfield', '123-456-7890'),
-                                                      ('Central Clinic', '456 Oak St, Metropolis', '987-654-3210');
+	fmt.Println("✅ Schedules generated successfully!")
+}
 
-        INSERT INTO doctors (name, specialization, experience, price, rating, address, phone, clinic_id) VALUES
-                                                                                                             ('Dr. John Doe', 'Cardiologist', 15, 150.00, 4.8, '123 Main St, Springfield', '111-222-3333', (SELECT id FROM clinic WHERE name = 'City Hospital')),
-                                                                                                             ('Dr. Alice Smith', 'Dermatologist', 10, 100.00, 4.5, '456 Oak St, Metropolis', '444-555-6666', (SELECT id FROM clinic WHERE name = 'Central Clinic'));
+// 📥 Load all doctor UUIDs from DB
+func getAllDoctorIDs(db *sql.DB) ([]string, error) {
+	rows, err := db.Query(`SELECT id FROM doctors`)
+	if err != nil {
+		return nil, fmt.Errorf("query doctor ids failed: %w", err)
+	}
+	defer rows.Close()
 
-        INSERT INTO schedule (doctor_id, slot_start, slot_end) VALUES
-                                                                   ((SELECT id FROM doctors WHERE name = 'Dr. John Doe'), '2025-03-20 09:00:00', '2025-03-20 10:00:00'),
-                                                                   ((SELECT id FROM doctors WHERE name = 'Dr. Alice Smith'), '2025-03-21 10:00:00', '2025-03-21 11:00:00');
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan doctor id failed: %w", err)
+		}
+		ids = append(ids, id)
+	}
 
-        INSERT INTO appointments (doctor_id, user_id, schedule_id, status) VALUES
-                                                                               ((SELECT id FROM doctors WHERE name = 'Dr. John Doe'), gen_random_uuid(), (SELECT id FROM schedule WHERE slot_start = '2025-03-20 09:00:00'), 'active'),
-                                                                               ((SELECT id FROM doctors WHERE name = 'Dr. Alice Smith'), gen_random_uuid(), (SELECT id FROM schedule WHERE slot_start = '2025-03-21 10:00:00'), 'completed');
+	return ids, nil
+}
 
-        INSERT INTO reviews (doctor_id, user_id, rating, comment) VALUES
-                                                                      ((SELECT id FROM doctors WHERE name = 'Dr. John Doe'), gen_random_uuid(), 5, 'Excellent service!'),
-                                                                      ((SELECT id FROM doctors WHERE name = 'Dr. Alice Smith'), gen_random_uuid(), 4, 'Very professional.');
+// 📅 Generate 2 weeks of schedule per doctor
+func generateSchedules(db *sql.DB, doctorIDs []string) error {
+	now := time.Now()
+	startDate := now.Truncate(24 * time.Hour)
+	endDate := startDate.AddDate(0, 0, 14) // 2 weeks
 
-        COMMIT;
-    END $$;
+	for _, doctorID := range doctorIDs {
+		for day := startDate; day.Before(endDate); day = day.AddDate(0, 0, 1) {
+			weekday := day.Weekday()
+
+			// Skip Sundays
+			if weekday == time.Sunday {
+				continue
+			}
+
+			slots := []struct {
+				startHour int
+				endHour   int
+			}{
+				{9, 13},
+				{14, 18},
+			}
+
+			if weekday == time.Saturday {
+				slots = []struct {
+					startHour int
+					endHour   int
+				}{
+					{9, 13},
+					{14, 15},
+				}
+			}
+
+			for _, slot := range slots {
+				for hour := slot.startHour; hour < slot.endHour; hour++ {
+					start := time.Date(day.Year(), day.Month(), day.Day(), hour, 0, 0, 0, time.Local)
+					end := start.Add(time.Hour)
+
+					_, err := db.Exec(`
+						INSERT INTO schedule (doctor_id, slot_start, slot_end)
+						VALUES ($1, $2, $3)
+						ON CONFLICT (doctor_id, slot_start, slot_end) DO NOTHING
+					`, doctorID, start, end)
+
+					if err != nil {
+						return fmt.Errorf("insert failed for doctor %s at %s: %w", doctorID, start, err)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
