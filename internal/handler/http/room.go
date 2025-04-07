@@ -1,9 +1,12 @@
 package http
 
 import (
+	"errors"
+
 	"github.com/yrss1/doctor.service/internal/domain/room"
 	"github.com/yrss1/doctor.service/internal/service/doctorService"
 	"github.com/yrss1/doctor.service/pkg/server/response"
+	"github.com/yrss1/doctor.service/pkg/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +38,12 @@ func (h *RoomHandler) add(c *gin.Context) {
 
 	res, err := h.doctorService.CreateRoom(c, req)
 	if err != nil {
-		response.InternalServerError(c, err)
+		switch {
+		case errors.Is(err, store.ErrorNotFound):
+			response.NotFound(c, err)
+		default:
+			response.InternalServerError(c, err)
+		}
 		return
 	}
 
