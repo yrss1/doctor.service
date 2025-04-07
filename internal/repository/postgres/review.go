@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/yrss1/doctor.service/internal/domain/review"
 	"github.com/yrss1/doctor.service/pkg/store"
@@ -30,14 +31,42 @@ func (r *ReviewRepository) List(ctx context.Context) (dest []review.Entity, err 
 }
 
 func (r *ReviewRepository) Add(ctx context.Context, data review.Entity) (id string, err error) {
-	query :=
-		`
-	INSERT INTO reviews (
-		doctor_id, user_id, rating, comment
-	) VALUES (
-		$1, $2, $3, $4
-	) RETURNING id;
+	var exists bool
+	checkQuery := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM appointments
+			WHERE user_id = $1 AND doctor_id = $2 AND status = 'completed'
+		);
+	`
+	if err = r.db.GetContext(ctx, &exists, checkQuery, data.UserID, data.DoctorID); err != nil {
+		return "", err
+	}
+	if !exists {
+		return "", errors.New("user has not completed an appointment with this doctor")
+	}
 
+	// Проверка: уже оставлял отзыв
+	// var alreadyLeft bool
+	// checkDup := `
+	// 	SELECT EXISTS (
+	// 		SELECT 1 FROM reviews
+	// 		WHERE user_id = $1 AND doctor_id = $2
+	// 	);
+	// `
+	// if err = r.db.GetContext(ctx, &alreadyLeft, checkDup, data.UserID, data.DoctorID); err != nil {
+	// 	return "", err
+	// }
+	// if alreadyLeft {
+	// 	return "", errors.New("review already exists for this doctor by this user")
+	// }
+
+	query := `
+		INSERT INTO reviews (
+			doctor_id, user_id, rating, comment
+		) VALUES (
+			$1, $2, $3, $4
+		) RETURNING id;
 	`
 
 	args := []any{

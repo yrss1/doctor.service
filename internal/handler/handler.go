@@ -4,10 +4,8 @@ import (
 	"github.com/yrss1/doctor.service/internal/config"
 	"github.com/yrss1/doctor.service/internal/handler/http"
 	"github.com/yrss1/doctor.service/internal/service/doctorService"
-	"github.com/yrss1/doctor.service/pkg/server/response"
 	"github.com/yrss1/doctor.service/pkg/server/router"
 
-	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
 )
 
@@ -41,21 +39,13 @@ func New(d Dependencies, configs ...Configuration) (h *Handler, err error) {
 func WithHTTPHandler() Configuration {
 	return func(h *Handler) (err error) {
 		h.HTTP = router.New()
-		h.HTTP.Use(timeout.New(
-			timeout.WithTimeout(h.dependencies.Configs.APP.Timeout),
-			timeout.WithHandler(func(ctx *gin.Context) {
-				ctx.Next()
-			}),
-			timeout.WithResponse(func(ctx *gin.Context) {
-				response.StatusRequestTimeout(ctx)
-			}),
-		))
 
 		doctorHandler := http.NewDoctorHandler(h.dependencies.DoctorService)
 		clinicHandler := http.NewClinicHandler(h.dependencies.DoctorService)
 		scheduleHandler := http.NewScheduleHandler(h.dependencies.DoctorService)
 		appointmentHandler := http.NewAppointmentHandler(h.dependencies.DoctorService)
 		reviewHandler := http.NewReviewHandler(h.dependencies.DoctorService)
+		roomHanlder := http.NewRoomHandler(h.dependencies.DoctorService)
 
 		api := h.HTTP.Group("/api/v1")
 		{
@@ -64,6 +54,7 @@ func WithHTTPHandler() Configuration {
 			scheduleHandler.Routes(api)
 			appointmentHandler.Routes(api)
 			reviewHandler.Routes(api)
+			roomHanlder.Routes(api)
 		}
 		api.GET("/health")
 
