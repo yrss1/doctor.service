@@ -1,0 +1,6 @@
+.git
+.gitignore
+credentials.json
+Dockerfile
+README.md
+*.log
