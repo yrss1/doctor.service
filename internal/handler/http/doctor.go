@@ -32,7 +32,7 @@ func (h *DoctorHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *DoctorHandler) listWithSchedules(c *gin.Context) {
-	res, err := h.doctorservice.ListDoctorWithSchedules(c)
+	res, err := h.doctorservice.ListDoctorWithSchedules(c.Request.Context())
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -44,7 +44,7 @@ func (h *DoctorHandler) listWithSchedules(c *gin.Context) {
 func (h *DoctorHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorservice.GetDoctorByIDWithSchedules(c, id)
+	res, err := h.doctorservice.GetDoctorByIDWithSchedules(c.Request.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -61,7 +61,7 @@ func (h *DoctorHandler) get(c *gin.Context) {
 func (h *DoctorHandler) delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorservice.DeleteDoctorByID(c, id); err != nil {
+	if err := h.doctorservice.DeleteDoctorByID(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)
@@ -79,7 +79,7 @@ func (h *DoctorHandler) search(c *gin.Context) {
 		ClinicName:     ptr(c.Query("clinic_name")),
 	}
 
-	res, err := h.doctorservice.SearchWithSchedules(c, req)
+	res, err := h.doctorservice.SearchWithSchedules(c.Request.Context(), req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return

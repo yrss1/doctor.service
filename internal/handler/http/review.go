@@ -32,7 +32,7 @@ func (h *ReviewHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *ReviewHandler) list(c *gin.Context) {
-	res, err := h.doctorservice.ListReview(c)
+	res, err := h.doctorservice.ListReview(c.Request.Context())
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -49,7 +49,7 @@ func (h *ReviewHandler) add(c *gin.Context) {
 		return
 	}
 
-	res, err := h.doctorservice.CreateReview(c, req)
+	res, err := h.doctorservice.CreateReview(c.Request.Context(), req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -61,7 +61,7 @@ func (h *ReviewHandler) add(c *gin.Context) {
 func (h *ReviewHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorservice.GetReviewByID(c, id)
+	res, err := h.doctorservice.GetReviewByID(c.Request.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -78,7 +78,7 @@ func (h *ReviewHandler) get(c *gin.Context) {
 func (h *ReviewHandler) delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorservice.DeleteReviewByID(c, id); err != nil {
+	if err := h.doctorservice.DeleteReviewByID(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)

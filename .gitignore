@@ -1,4 +1,5 @@
 .env
 *.idea
 *.log
-credentials.jsoncredentials.json
+credentials.json
+*.json
