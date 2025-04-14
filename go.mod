@@ -1,6 +1,6 @@
 module github.com/yrss1/doctor.service
 
-go 1.24
+go 1.24.2
 
 require (
 	github.com/gin-contrib/cors v1.7.5
