@@ -2,8 +2,9 @@ package http
 
 import (
 	"errors"
+
 	"github.com/yrss1/doctor.service/internal/domain/clinic"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/response"
 	"github.com/yrss1/doctor.service/pkg/store"
 
@@ -11,12 +12,12 @@ import (
 )
 
 type ClinicHandler struct {
-	doctorService *doctorService.Service
+	doctorservice *doctorservice.Service
 }
 
-func NewClinicHandler(doctorService doctorService.Service) *ClinicHandler {
+func NewClinicHandler(doctorservice doctorservice.Service) *ClinicHandler {
 	return &ClinicHandler{
-		doctorService: &doctorService,
+		doctorservice: &doctorservice,
 	}
 }
 
@@ -31,7 +32,7 @@ func (h *ClinicHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *ClinicHandler) list(c *gin.Context) {
-	res, err := h.doctorService.ListClinic(c)
+	res, err := h.doctorservice.ListClinic(c.Request.Context())
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -48,7 +49,7 @@ func (h *ClinicHandler) add(c *gin.Context) {
 		return
 	}
 
-	res, err := h.doctorService.CreateClinic(c, req)
+	res, err := h.doctorservice.CreateClinic(c.Request.Context(), req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -60,7 +61,7 @@ func (h *ClinicHandler) add(c *gin.Context) {
 func (h *ClinicHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.GetClinicByID(c, id)
+	res, err := h.doctorservice.GetClinicByID(c.Request.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -77,7 +78,7 @@ func (h *ClinicHandler) get(c *gin.Context) {
 func (h *ClinicHandler) delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorService.DeleteClinicByID(c, id); err != nil {
+	if err := h.doctorservice.DeleteClinicByID(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)

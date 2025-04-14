@@ -1,4 +1,4 @@
-package doctorService
+package doctorservice
 
 import (
 	"github.com/yrss1/doctor.service/internal/domain/appointment"
@@ -6,6 +6,7 @@ import (
 	"github.com/yrss1/doctor.service/internal/domain/doctor"
 	"github.com/yrss1/doctor.service/internal/domain/review"
 	"github.com/yrss1/doctor.service/internal/domain/schedule"
+	"github.com/yrss1/doctor.service/internal/provider/meet"
 )
 
 type Configuration func(s *Service) error
@@ -16,6 +17,7 @@ type Service struct {
 	scheduleRepository    schedule.Repository
 	appointmentRepository appointment.Repository
 	reviewRepository      review.Repository
+	meetClient            meet.Client
 }
 
 func New(configs ...Configuration) (s *Service, err error) {
@@ -61,6 +63,13 @@ func WithAppointmentRepository(appointmentRepository appointment.Repository) Con
 func WithReviewRepository(reviewRepository review.Repository) Configuration {
 	return func(s *Service) error {
 		s.reviewRepository = reviewRepository
+		return nil
+	}
+}
+
+func WithMeetClient(meetClient meet.Client) Configuration {
+	return func(s *Service) error {
+		s.meetClient = meetClient
 		return nil
 	}
 }

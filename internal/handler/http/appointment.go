@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/yrss1/doctor.service/internal/domain/appointment"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/response"
 	"github.com/yrss1/doctor.service/pkg/store"
 
@@ -12,12 +12,12 @@ import (
 )
 
 type AppointmentHandler struct {
-	doctorService *doctorService.Service
+	doctorservice *doctorservice.Service
 }
 
-func NewAppointmentHandler(doctorService doctorService.Service) *AppointmentHandler {
+func NewAppointmentHandler(doctorservice doctorservice.Service) *AppointmentHandler {
 	return &AppointmentHandler{
-		doctorService: &doctorService,
+		doctorservice: &doctorservice,
 	}
 }
 
@@ -33,7 +33,7 @@ func (h *AppointmentHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *AppointmentHandler) list(c *gin.Context) {
-	res, err := h.doctorService.ListAppointment(c)
+	res, err := h.doctorservice.ListAppointment(c.Request.Context())
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -50,7 +50,7 @@ func (h *AppointmentHandler) add(c *gin.Context) {
 		return
 	}
 
-	res, err := h.doctorService.CreateAppointment(c, req)
+	res, err := h.doctorservice.CreateAppointment(c.Request.Context(), req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -62,7 +62,7 @@ func (h *AppointmentHandler) add(c *gin.Context) {
 func (h *AppointmentHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.GetAppointmentByID(c, id)
+	res, err := h.doctorservice.GetAppointmentByID(c.Request.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -79,7 +79,7 @@ func (h *AppointmentHandler) get(c *gin.Context) {
 func (h *AppointmentHandler) cancel(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorService.CancelAppointmentByID(c, id); err != nil {
+	if err := h.doctorservice.CancelAppointmentByID(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)
@@ -93,7 +93,7 @@ func (h *AppointmentHandler) cancel(c *gin.Context) {
 func (h *AppointmentHandler) listByUserID(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.ListAppointmentsByUserID(c, id)
+	res, err := h.doctorservice.ListAppointmentsByUserID(c.Request.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):

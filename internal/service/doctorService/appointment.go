@@ -1,4 +1,4 @@
-package doctorService
+package doctorservice
 
 import (
 	"context"

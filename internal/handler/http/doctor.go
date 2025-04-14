@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/yrss1/doctor.service/internal/domain/doctor"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/response"
 	"github.com/yrss1/doctor.service/pkg/store"
 
@@ -12,12 +12,12 @@ import (
 )
 
 type DoctorHandler struct {
-	doctorService *doctorService.Service
+	doctorservice *doctorservice.Service
 }
 
-func NewDoctorHandler(doctorService doctorService.Service) *DoctorHandler {
+func NewDoctorHandler(doctorservice doctorservice.Service) *DoctorHandler {
 	return &DoctorHandler{
-		doctorService: &doctorService,
+		doctorservice: &doctorservice,
 	}
 }
 
@@ -32,7 +32,7 @@ func (h *DoctorHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *DoctorHandler) listWithSchedules(c *gin.Context) {
-	res, err := h.doctorService.ListDoctorWithSchedules(c)
+	res, err := h.doctorservice.ListDoctorWithSchedules(c)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -44,7 +44,7 @@ func (h *DoctorHandler) listWithSchedules(c *gin.Context) {
 func (h *DoctorHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.GetDoctorByIDWtihSchedules(c, id)
+	res, err := h.doctorservice.GetDoctorByIDWithSchedules(c, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -61,7 +61,7 @@ func (h *DoctorHandler) get(c *gin.Context) {
 func (h *DoctorHandler) delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorService.DeleteDoctorByID(c, id); err != nil {
+	if err := h.doctorservice.DeleteDoctorByID(c, id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)
@@ -79,7 +79,7 @@ func (h *DoctorHandler) search(c *gin.Context) {
 		ClinicName:     ptr(c.Query("clinic_name")),
 	}
 
-	res, err := h.doctorService.SearchWithSchedules(c, req)
+	res, err := h.doctorservice.SearchWithSchedules(c, req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return

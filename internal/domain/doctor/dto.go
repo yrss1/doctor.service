@@ -9,7 +9,7 @@ type Request struct {
 	Rating         *float64 `json:"rating"`
 	Address        *string  `json:"address"`
 	Phone          *string  `json:"phone"`
-	ClinicName     *string  `json:"clinid_name"`
+	ClinicName     *string  `json:"clinic_name"`
 }
 
 type Response struct {
@@ -21,7 +21,7 @@ type Response struct {
 	Rating             float64        `json:"rating"`
 	Address            string         `json:"address"`
 	Phone              string         `json:"phone"`
-	ClinicName         string         `json:"clinid_name"`
+	ClinicName         string         `json:"clinic_name"`
 	AvailableSchedules []ScheduleSlot `json:"available_schedules"`
 }
 

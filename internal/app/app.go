@@ -9,15 +9,30 @@ import (
 
 	"github.com/yrss1/doctor.service/internal/config"
 	"github.com/yrss1/doctor.service/internal/handler"
+	"github.com/yrss1/doctor.service/internal/provider/meet"
 	"github.com/yrss1/doctor.service/internal/repository"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/log"
 	"github.com/yrss1/doctor.service/pkg/server"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/calendar/v3"
 )
 
 func Run() {
 	logger := log.LoggerFromContext(context.Background())
+
+	b, err := os.ReadFile("credentials.json")
+	if err != nil {
+		logger.Error("ERR_READ_CLIENT_FILE", zap.Error(err))
+		return
+	}
+
+	oauthConfig, err := google.ConfigFromJSON(b, calendar.CalendarScope)
+	if err != nil {
+		logger.Error("ERR_LOAD_OAUTH_CONFIGS", zap.Error(err))
+		return
+	}
 
 	configs, err := config.New()
 	if err != nil {
@@ -31,12 +46,19 @@ func Run() {
 		return
 	}
 
-	doctorService, err := doctorService.New(
-		doctorService.WithDoctorRepository(repositories.Doctor),
-		doctorService.WithClinicRepository(repositories.Clinic),
-		doctorService.WithScheduleRepository(repositories.Schedule),
-		doctorService.WithAppointmentRepository(repositories.Appointment),
-		doctorService.WithReviewRepository(repositories.Review),
+	meetClient, err := meet.New(meet.Credentials{
+		URL:         configs.APP.Mode,
+		OauthConfig: oauthConfig,
+		OauthToken:  nil,
+	})
+
+	doctorservice, err := doctorservice.New(
+		doctorservice.WithDoctorRepository(repositories.Doctor),
+		doctorservice.WithClinicRepository(repositories.Clinic),
+		doctorservice.WithScheduleRepository(repositories.Schedule),
+		doctorservice.WithAppointmentRepository(repositories.Appointment),
+		doctorservice.WithReviewRepository(repositories.Review),
+		doctorservice.WithMeetClient(*meetClient),
 	)
 	if err != nil {
 		logger.Error("ERR_INIT_DOCTOR_SERVICE", zap.Error(err))
@@ -46,7 +68,7 @@ func Run() {
 	handlers, err := handler.New(
 		handler.Dependencies{
 			Configs:       *configs,
-			DoctorService: *doctorService,
+			DoctorService: *doctorservice,
 		},
 		handler.WithHTTPHandler())
 	if err != nil {

@@ -1,7 +1,8 @@
-package doctorService
+package doctorservice
 
 import (
 	"context"
+
 	"github.com/yrss1/doctor.service/internal/domain/review"
 	"github.com/yrss1/doctor.service/pkg/log"
 	"go.uber.org/zap"

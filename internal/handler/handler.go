@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/yrss1/doctor.service/internal/config"
 	"github.com/yrss1/doctor.service/internal/handler/http"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/router"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ import (
 type Dependencies struct {
 	Configs config.Configs
 
-	DoctorService doctorService.Service
+	DoctorService doctorservice.Service
 }
 
 type Handler struct {
@@ -45,8 +45,8 @@ func WithHTTPHandler() Configuration {
 		scheduleHandler := http.NewScheduleHandler(h.dependencies.DoctorService)
 		appointmentHandler := http.NewAppointmentHandler(h.dependencies.DoctorService)
 		reviewHandler := http.NewReviewHandler(h.dependencies.DoctorService)
-		roomHanlder := http.NewRoomHandler(h.dependencies.DoctorService)
-
+		roomHandlder := http.NewRoomHandler(h.dependencies.DoctorService)
+		meetHandler := http.NewMeetHandler(h.dependencies.DoctorService)
 		api := h.HTTP.Group("/api/v1")
 		{
 			doctorHandler.Routes(api)
@@ -54,7 +54,8 @@ func WithHTTPHandler() Configuration {
 			scheduleHandler.Routes(api)
 			appointmentHandler.Routes(api)
 			reviewHandler.Routes(api)
-			roomHanlder.Routes(api)
+			roomHandlder.Routes(api)
+			meetHandler.Routes(api)
 		}
 		api.GET("/health")
 

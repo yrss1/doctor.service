@@ -1,4 +1,4 @@
-package doctorService
+package doctorservice
 
 import (
 	"context"
@@ -22,7 +22,7 @@ func (s *Service) ListDoctorWithSchedules(ctx context.Context) (res []doctor.Res
 	return
 }
 
-func (s *Service) GetDoctorByIDWtihSchedules(ctx context.Context, id string) (res doctor.Response, err error) {
+func (s *Service) GetDoctorByIDWithSchedules(ctx context.Context, id string) (res doctor.Response, err error) {
 	logger := log.LoggerFromContext(ctx).Named("GetDoctorByID")
 
 	data, err := s.doctorRepository.GetWithSchedules(ctx, id)

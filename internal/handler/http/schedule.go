@@ -2,8 +2,9 @@ package http
 
 import (
 	"errors"
+
 	"github.com/yrss1/doctor.service/internal/domain/schedule"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/response"
 	"github.com/yrss1/doctor.service/pkg/store"
 
@@ -11,12 +12,12 @@ import (
 )
 
 type ScheduleHandler struct {
-	doctorService *doctorService.Service
+	doctorservice *doctorservice.Service
 }
 
-func NewScheduleHandler(doctorService doctorService.Service) *ScheduleHandler {
+func NewScheduleHandler(doctorservice doctorservice.Service) *ScheduleHandler {
 	return &ScheduleHandler{
-		doctorService: &doctorService,
+		doctorservice: &doctorservice,
 	}
 }
 
@@ -32,7 +33,7 @@ func (h *ScheduleHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *ScheduleHandler) list(c *gin.Context) {
-	res, err := h.doctorService.ListSchedule(c)
+	res, err := h.doctorservice.ListSchedule(c.Request.Context())
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -49,7 +50,7 @@ func (h *ScheduleHandler) add(c *gin.Context) {
 		return
 	}
 
-	res, err := h.doctorService.CreateSchedule(c, req)
+	res, err := h.doctorservice.CreateSchedule(c.Request.Context(), req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -61,7 +62,7 @@ func (h *ScheduleHandler) add(c *gin.Context) {
 func (h *ScheduleHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.GetScheduleByID(c, id)
+	res, err := h.doctorservice.GetScheduleByID(c.Request.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -78,7 +79,7 @@ func (h *ScheduleHandler) get(c *gin.Context) {
 func (h *ScheduleHandler) delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorService.DeleteScheduleByID(c, id); err != nil {
+	if err := h.doctorservice.DeleteScheduleByID(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)
@@ -91,7 +92,7 @@ func (h *ScheduleHandler) delete(c *gin.Context) {
 
 func (h *ScheduleHandler) listByDoctorID(c *gin.Context) {
 	doctorID := c.Param("doctorID")
-	res, err := h.doctorService.ListScheduleByDoctorID(c, doctorID)
+	res, err := h.doctorservice.ListScheduleByDoctorID(c.Request.Context(), doctorID)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return

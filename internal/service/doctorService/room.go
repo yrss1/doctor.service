@@ -1,4 +1,4 @@
-package doctorService
+package doctorservice
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/yrss1/doctor.service/internal/domain/room"
 	"github.com/yrss1/doctor.service/pkg/log"
+	"github.com/yrss1/doctor.service/pkg/store"
 	"go.uber.org/zap"
 )
 
@@ -15,6 +16,11 @@ func (s *Service) CreateRoom(ctx context.Context, req room.Entity) (id string, e
 	appt, err := s.GetAppointmentByID(ctx, req.AppointmentID)
 	if err != nil {
 		logger.Error("appointment not found", zap.Error(err))
+		return id, store.ErrorNotFound
+	}
+
+	if *appt.Status != "active" {
+		logger.Error("acces denied", zap.Error(err))
 		return id, errors.New("access denied")
 	}
 

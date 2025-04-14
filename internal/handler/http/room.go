@@ -1,20 +1,23 @@
 package http
 
 import (
+	"errors"
+
 	"github.com/yrss1/doctor.service/internal/domain/room"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/response"
+	"github.com/yrss1/doctor.service/pkg/store"
 
 	"github.com/gin-gonic/gin"
 )
 
 type RoomHandler struct {
-	doctorService *doctorService.Service
+	doctorservice *doctorservice.Service
 }
 
-func NewRoomHandler(doctorService doctorService.Service) *RoomHandler {
+func NewRoomHandler(doctorservice doctorservice.Service) *RoomHandler {
 	return &RoomHandler{
-		doctorService: &doctorService,
+		doctorservice: &doctorservice,
 	}
 }
 
@@ -33,9 +36,14 @@ func (h *RoomHandler) add(c *gin.Context) {
 		return
 	}
 
-	res, err := h.doctorService.CreateRoom(c, req)
+	res, err := h.doctorservice.CreateRoom(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, err)
+		switch {
+		case errors.Is(err, store.ErrorNotFound):
+			response.NotFound(c, err)
+		default:
+			response.InternalServerError(c, err)
+		}
 		return
 	}
 

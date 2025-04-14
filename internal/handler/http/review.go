@@ -2,8 +2,9 @@ package http
 
 import (
 	"errors"
+
 	"github.com/yrss1/doctor.service/internal/domain/review"
-	"github.com/yrss1/doctor.service/internal/service/doctorService"
+	"github.com/yrss1/doctor.service/internal/service/doctorservice"
 	"github.com/yrss1/doctor.service/pkg/server/response"
 	"github.com/yrss1/doctor.service/pkg/store"
 
@@ -11,12 +12,12 @@ import (
 )
 
 type ReviewHandler struct {
-	doctorService *doctorService.Service
+	doctorservice *doctorservice.Service
 }
 
-func NewReviewHandler(doctorService doctorService.Service) *ReviewHandler {
+func NewReviewHandler(doctorservice doctorservice.Service) *ReviewHandler {
 	return &ReviewHandler{
-		doctorService: &doctorService,
+		doctorservice: &doctorservice,
 	}
 }
 
@@ -31,7 +32,7 @@ func (h *ReviewHandler) Routes(r *gin.RouterGroup) {
 }
 
 func (h *ReviewHandler) list(c *gin.Context) {
-	res, err := h.doctorService.ListReview(c)
+	res, err := h.doctorservice.ListReview(c)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -48,7 +49,7 @@ func (h *ReviewHandler) add(c *gin.Context) {
 		return
 	}
 
-	res, err := h.doctorService.CreateReview(c, req)
+	res, err := h.doctorservice.CreateReview(c, req)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return
@@ -60,7 +61,7 @@ func (h *ReviewHandler) add(c *gin.Context) {
 func (h *ReviewHandler) get(c *gin.Context) {
 	id := c.Param("id")
 
-	res, err := h.doctorService.GetReviewByID(c, id)
+	res, err := h.doctorservice.GetReviewByID(c, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
@@ -77,7 +78,7 @@ func (h *ReviewHandler) get(c *gin.Context) {
 func (h *ReviewHandler) delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.doctorService.DeleteReviewByID(c, id); err != nil {
+	if err := h.doctorservice.DeleteReviewByID(c, id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNotFound):
 			response.NotFound(c, err)
