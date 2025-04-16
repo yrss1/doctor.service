@@ -22,7 +22,7 @@ import (
 func Run() {
 	logger := log.LoggerFromContext(context.Background())
 
-	b, err := os.ReadFile("credentials.json")
+	b, err := os.ReadFile("/etc/secrets/credentials.json")
 	if err != nil {
 		logger.Error("ERR_READ_CLIENT_FILE", zap.Error(err))
 		return
