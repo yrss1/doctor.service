@@ -19,8 +19,9 @@ type EntityView struct {
 	SlotStart time.Time `json:"slot_start" db:"slot_start"`
 	SlotEnd   time.Time `json:"slot_end" db:"slot_end"`
 
-	DoctorID       string `json:"doctor_id" db:"doctor_id"`
-	DoctorName     string `json:"doctor_name" db:"doctor_name"`
-	Specialization string `json:"specialization" db:"specialization"`
-	DoctorPhone    string `json:"doctor_phone" db:"doctor_phone"`
+	DoctorID       string  `json:"doctor_id" db:"doctor_id"`
+	DoctorName     string  `json:"doctor_name" db:"doctor_name"`
+	Specialization string  `json:"specialization" db:"specialization"`
+	DoctorPhone    string  `json:"doctor_phone" db:"doctor_phone"`
+	MeetingURL     *string `json:"meeting_url" db:"meeting_url"`
 }

@@ -144,10 +144,11 @@ func (r *AppointmentRepository) ListByUserID(ctx context.Context, userID string)
 		a.status,
 		a.created_at,
 		a.updated_at,
+		a.meeting_url,
 		d.id AS doctor_id,
 		d.name AS doctor_name,
 		d.specialization,
-		d.phone AS doctor_phone,  -- ← добавлена запятая
+		d.phone AS doctor_phone,
 		s.slot_start,
 		s.slot_end
 	FROM appointments a
