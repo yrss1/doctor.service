@@ -6,10 +6,11 @@ import (
 	"errors"
 
 	"github.com/yrss1/doctor.service/internal/domain/appointment"
-
+	"github.com/yrss1/doctor.service/pkg/log"
 	"github.com/yrss1/doctor.service/pkg/store"
 
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 type AppointmentRepository struct {
@@ -166,18 +167,26 @@ func (r *AppointmentRepository) ListByUserID(ctx context.Context, userID string)
 
 func (r *AppointmentRepository) UpdateMeetingURL(ctx context.Context, id string, meetingURL string) error {
 	// First, check if the appointment exists and get its status
-	var status string
-	checkQuery := `SELECT status FROM appointments WHERE id = $1;`
-	err := r.db.GetContext(ctx, &status, checkQuery, id)
+	var appointment struct {
+		ID     string
+		Status string
+	}
+	checkQuery := `SELECT CAST(id AS TEXT) as id, status FROM appointments WHERE id = $1;`
+	err := r.db.GetContext(ctx, &appointment, checkQuery, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.LoggerFromContext(ctx).Error("appointment not found", zap.String("id", id))
 			return store.ErrorNotFound
 		}
+		log.LoggerFromContext(ctx).Error("database error", zap.Error(err))
 		return err
 	}
 
 	// If appointment exists but is not active, return not found
-	if status != "active" {
+	if appointment.Status != "active" {
+		log.LoggerFromContext(ctx).Error("appointment is not active",
+			zap.String("id", id),
+			zap.String("status", appointment.Status))
 		return store.ErrorNotFound
 	}
 
@@ -185,17 +194,23 @@ func (r *AppointmentRepository) UpdateMeetingURL(ctx context.Context, id string,
 	query := `UPDATE appointments SET meeting_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND status = 'active';`
 	result, err := r.db.ExecContext(ctx, query, meetingURL, id)
 	if err != nil {
+		log.LoggerFromContext(ctx).Error("failed to update meeting URL", zap.Error(err))
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		log.LoggerFromContext(ctx).Error("failed to get rows affected", zap.Error(err))
 		return err
 	}
 
 	if rowsAffected == 0 {
+		log.LoggerFromContext(ctx).Error("no rows affected", zap.String("id", id))
 		return store.ErrorNotFound
 	}
 
+	log.LoggerFromContext(ctx).Info("meeting URL updated successfully",
+		zap.String("id", id),
+		zap.String("meeting_url", meetingURL))
 	return nil
 }
