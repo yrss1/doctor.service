@@ -23,7 +23,7 @@ func NewAppointmentRepository(db *sqlx.DB) *AppointmentRepository {
 func (r *AppointmentRepository) List(ctx context.Context) (dest []appointment.Entity, err error) {
 	query := `
 		SELECT 
-			id, doctor_id, user_id, schedule_id, status
+			id, doctor_id, user_id, schedule_id, status, meeting_url
 		FROM appointments;
 		`
 
@@ -50,9 +50,9 @@ func (r *AppointmentRepository) Add(ctx context.Context, data appointment.Entity
 
 	insertQuery := `
 		INSERT INTO appointments (
-			doctor_id, user_id, schedule_id, status
+			doctor_id, user_id, schedule_id, status, meeting_url
 		) VALUES (
-			$1, $2, $3, $4
+			$1, $2, $3, $4, $5
 		) RETURNING id;
 	`
 
@@ -61,6 +61,7 @@ func (r *AppointmentRepository) Add(ctx context.Context, data appointment.Entity
 		data.UserID,
 		data.ScheduleID,
 		data.Status,
+		data.MeetingURL,
 	}
 
 	if err = tx.QueryRowContext(ctx, insertQuery, args...).Scan(&id); err != nil {
@@ -82,7 +83,7 @@ func (r *AppointmentRepository) Add(ctx context.Context, data appointment.Entity
 func (r *AppointmentRepository) Get(ctx context.Context, id string) (dest appointment.Entity, err error) {
 	query := `
 	SELECT 
-		id, doctor_id, user_id, schedule_id, status
+		id, doctor_id, user_id, schedule_id, status, meeting_url
 	FROM appointments
 	WHERE id = $1;
 	`
@@ -164,8 +165,24 @@ func (r *AppointmentRepository) ListByUserID(ctx context.Context, userID string)
 }
 
 func (r *AppointmentRepository) UpdateMeetingURL(ctx context.Context, id string, meetingURL string) error {
-	query := `UPDATE appointments SET meeting_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND status = 'active';`
+	// First, check if the appointment exists and get its status
+	var status string
+	checkQuery := `SELECT status FROM appointments WHERE id = $1;`
+	err := r.db.GetContext(ctx, &status, checkQuery, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return store.ErrorNotFound
+		}
+		return err
+	}
 
+	// If appointment exists but is not active, return not found
+	if status != "active" {
+		return store.ErrorNotFound
+	}
+
+	// Update the meeting URL
+	query := `UPDATE appointments SET meeting_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND status = 'active';`
 	result, err := r.db.ExecContext(ctx, query, meetingURL, id)
 	if err != nil {
 		return err
