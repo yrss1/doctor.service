@@ -22,7 +22,7 @@ import (
 func Run() {
 	logger := log.LoggerFromContext(context.Background())
 
-	b, err := os.ReadFile("/etc/secrets/credentials.json")
+	b, err := os.ReadFile("credentials.json")
 	if err != nil {
 		logger.Error("ERR_READ_CLIENT_FILE", zap.Error(err))
 		return
@@ -46,19 +46,11 @@ func Run() {
 		return
 	}
 
-	// Create token storage
-	tokenStorage := meet.NewFileTokenStorage("tokens/google_calendar_token.json")
-
 	meetClient, err := meet.New(meet.Credentials{
-		URL:          configs.APP.Mode,
-		OauthConfig:  oauthConfig,
-		OauthToken:   nil, // Will be loaded from storage if available
-		TokenStorage: tokenStorage,
+		URL:         configs.APP.Mode,
+		OauthConfig: oauthConfig,
+		OauthToken:  nil,
 	})
-	if err != nil {
-		logger.Error("ERR_INIT_MEET_CLIENT", zap.Error(err))
-		return
-	}
 
 	doctorservice, err := doctorservice.New(
 		doctorservice.WithDoctorRepository(repositories.Doctor),
