@@ -46,11 +46,19 @@ func Run() {
 		return
 	}
 
+	// Create token storage
+	tokenStorage := meet.NewFileTokenStorage("tokens/google_calendar_token.json")
+
 	meetClient, err := meet.New(meet.Credentials{
-		URL:         configs.APP.Mode,
-		OauthConfig: oauthConfig,
-		OauthToken:  nil,
+		URL:          configs.APP.Mode,
+		OauthConfig:  oauthConfig,
+		OauthToken:   nil, // Will be loaded from storage if available
+		TokenStorage: tokenStorage,
 	})
+	if err != nil {
+		logger.Error("ERR_INIT_MEET_CLIENT", zap.Error(err))
+		return
+	}
 
 	doctorservice, err := doctorservice.New(
 		doctorservice.WithDoctorRepository(repositories.Doctor),

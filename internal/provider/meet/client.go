@@ -10,9 +10,10 @@ import (
 )
 
 type Credentials struct {
-	URL         string
-	OauthConfig *oauth2.Config
-	OauthToken  *oauth2.Token
+	URL          string
+	OauthConfig  *oauth2.Config
+	OauthToken   *oauth2.Token
+	TokenStorage TokenStorage
 }
 
 type Client struct {
@@ -35,6 +36,15 @@ func New(credentials Credentials) (client *Client, err error) {
 	client = &Client{
 		credentials: credentials,
 	}
+
+	// Try to load token from storage if not provided
+	if client.credentials.OauthToken == nil && client.credentials.TokenStorage != nil {
+		client.credentials.OauthToken, err = client.credentials.TokenStorage.LoadToken()
+		if err != nil {
+			return nil, fmt.Errorf("failed to load token: %w", err)
+		}
+	}
+
 	return
 }
 
@@ -43,23 +53,30 @@ func (c *Client) LoginURL() string {
 }
 
 func (c *Client) CreateMeetEvent(ctx context.Context, req Request) (res Response, err error) {
-	client := c.credentials.OauthConfig.Client(ctx, c.credentials.OauthToken)
+	// Check if we have a token
+	if c.credentials.OauthToken == nil {
+		return res, fmt.Errorf("no OAuth token available")
+	}
 
+	// Create OAuth2 client with automatic token refresh
+	tokenSource := c.credentials.OauthConfig.TokenSource(ctx, c.credentials.OauthToken)
+	client := oauth2.NewClient(ctx, tokenSource)
+
+	// Create Calendar service
 	srv, err := calendar.New(client)
 	if err != nil {
 		return res, fmt.Errorf("calendar client error: %v", err)
 	}
 
-	now := time.Now()
 	event := &calendar.Event{
 		Summary:     "Видеозвонок",
 		Description: "Google Meet встреча",
 		Start: &calendar.EventDateTime{
-			DateTime: now.Add(24 * time.Hour).Format(time.RFC3339),
+			DateTime: req.StartTime,
 			TimeZone: "Asia/Almaty",
 		},
 		End: &calendar.EventDateTime{
-			DateTime: now.Add(24*time.Hour + 40*time.Minute).Format(time.RFC3339),
+			DateTime: req.EndTime,
 			TimeZone: "Asia/Almaty",
 		},
 		Attendees: []*calendar.EventAttendee{
@@ -88,6 +105,16 @@ func (c *Client) CreateMeetEvent(ctx context.Context, req Request) (res Response
 		return res, fmt.Errorf("error creating calendar event: %v", err)
 	}
 
+	// After successful API call, save the current token
+	if c.credentials.TokenStorage != nil {
+		if token, err := tokenSource.Token(); err == nil {
+			if err := c.credentials.TokenStorage.SaveToken(token); err != nil {
+				// Log the error but don't fail the operation
+				fmt.Printf("Failed to save token: %v\n", err)
+			}
+		}
+	}
+
 	for _, entry := range createdEvent.ConferenceData.EntryPoints {
 		if entry.EntryPointType == "video" {
 			res.MeetLink = entry.Uri
@@ -104,7 +131,15 @@ func (c *Client) ExchangeCode(ctx context.Context, code string) (*oauth2.Token, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
 	}
+
 	c.credentials.OauthToken = token
+
+	// Save the token if storage is available
+	if c.credentials.TokenStorage != nil {
+		if err := c.credentials.TokenStorage.SaveToken(token); err != nil {
+			return nil, fmt.Errorf("failed to save token: %w", err)
+		}
+	}
 
 	return token, nil
 }
