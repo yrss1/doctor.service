@@ -10,4 +10,5 @@ type Repository interface {
 	Get(ctx context.Context, id string) (dest Entity, err error)
 	Cancel(ctx context.Context, id string) (err error)
 	ListByUserID(ctx context.Context, id string) ([]EntityView, error)
+	UpdateMeetingURL(ctx context.Context, id string, meetingURL string) error
 }

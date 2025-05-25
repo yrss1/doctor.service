@@ -29,6 +29,7 @@ func (h *AppointmentHandler) Routes(r *gin.RouterGroup) {
 		api.GET("/:id", h.get)
 		api.GET("/cancel/:id", h.cancel)
 		api.GET("/user/:id", h.listByUserID)
+		api.PUT("/:id/meeting-url", h.updateMeetingURL)
 	}
 }
 
@@ -105,4 +106,30 @@ func (h *AppointmentHandler) listByUserID(c *gin.Context) {
 	}
 
 	response.OK(c, res)
+}
+
+type UpdateMeetingURLRequest struct {
+	MeetingURL string `json:"meeting_url" binding:"required"`
+}
+
+func (h *AppointmentHandler) updateMeetingURL(c *gin.Context) {
+	id := c.Param("id")
+	req := UpdateMeetingURLRequest{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err, req)
+		return
+	}
+
+	if err := h.doctorservice.UpdateAppointmentMeetingURL(c.Request.Context(), id, req.MeetingURL); err != nil {
+		switch {
+		case errors.Is(err, store.ErrorNotFound):
+			response.NotFound(c, err)
+		default:
+			response.InternalServerError(c, err)
+		}
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Meeting URL updated successfully"})
 }

@@ -79,3 +79,14 @@ func (s *Service) ListAppointmentsByUserID(ctx context.Context, id string) (data
 
 	return
 }
+
+func (s *Service) UpdateAppointmentMeetingURL(ctx context.Context, id string, meetingURL string) error {
+	logger := log.LoggerFromContext(ctx).Named("UpdateAppointmentMeetingURL")
+
+	if err := s.appointmentRepository.UpdateMeetingURL(ctx, id, meetingURL); err != nil {
+		logger.Error("failed to update meeting URL", zap.Error(err))
+		return err
+	}
+
+	return nil
+}

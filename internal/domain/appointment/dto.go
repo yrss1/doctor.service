@@ -6,6 +6,7 @@ type Request struct {
 	UserID     *string `json:"user_id"`
 	ScheduleID *string `json:"schedule_id"`
 	Status     *string `json:"status"`
+	MeetingURL *string `json:"meeting_url"`
 }
 
 type Response struct {
@@ -14,6 +15,7 @@ type Response struct {
 	UserID     *string `json:"user_id"`
 	ScheduleID *string `json:"schedule_id"`
 	Status     *string `json:"status"`
+	MeetingURL *string `json:"meeting_url"`
 }
 
 func ParseFromEntity(data Entity) (res Response) {
@@ -23,6 +25,7 @@ func ParseFromEntity(data Entity) (res Response) {
 		UserID:     data.UserID,
 		ScheduleID: data.ScheduleID,
 		Status:     data.Status,
+		MeetingURL: data.MeetingURL,
 	}
 
 	return

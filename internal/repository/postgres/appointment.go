@@ -162,3 +162,23 @@ func (r *AppointmentRepository) ListByUserID(ctx context.Context, userID string)
 
 	return result, nil
 }
+
+func (r *AppointmentRepository) UpdateMeetingURL(ctx context.Context, id string, meetingURL string) error {
+	query := `UPDATE appointments SET meeting_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND status = 'active';`
+
+	result, err := r.db.ExecContext(ctx, query, meetingURL, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return store.ErrorNotFound
+	}
+
+	return nil
+}

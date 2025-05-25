@@ -54,6 +54,7 @@ DO $$
                                                     user_id UUID NOT NULL, -- ID пользователя из внешнего сервиса
                                                     schedule_id UUID NOT NULL REFERENCES schedule(id) ON DELETE CASCADE,
                                                     status VARCHAR(10) NOT NULL CHECK (status IN ('active', 'canceled', 'completed')),
+                                                    meeting_url TEXT,
                                                     UNIQUE (schedule_id, user_id)
         );
 

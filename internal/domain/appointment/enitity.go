@@ -8,6 +8,7 @@ type Entity struct {
 	UserID     *string `json:"user_id" db:"user_id"`
 	ScheduleID *string `json:"schedule_id" db:"schedule_id"`
 	Status     *string `json:"status" db:"status"`
+	MeetingURL *string `json:"meeting_url" db:"meeting_url"`
 }
 
 type EntityView struct {
