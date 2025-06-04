@@ -9,6 +9,7 @@ type Entity struct {
 	Rating             *float64       `json:"rating" db:"rating"`
 	Address            *string        `json:"address" db:"address"`
 	Phone              *string        `json:"phone" db:"phone"`
+	PhotoURL           *string        `json:"photo_url" db:"photo_url"`
 	ClinicName         *string        `json:"clinic_name" db:"clinic_name"`
 	AvailableSchedules []ScheduleSlot `json:"available_schedules" db:"available_schedules"`
 }

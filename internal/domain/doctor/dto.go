@@ -9,6 +9,7 @@ type Request struct {
 	Rating         *float64 `json:"rating"`
 	Address        *string  `json:"address"`
 	Phone          *string  `json:"phone"`
+	PhotoURL       *string  `json:"photo_url"`
 	ClinicName     *string  `json:"clinic_name"`
 }
 
@@ -21,6 +22,7 @@ type Response struct {
 	Rating             float64        `json:"rating"`
 	Address            string         `json:"address"`
 	Phone              string         `json:"phone"`
+	PhotoURL           string         `json:"photo_url"`
 	ClinicName         string         `json:"clinic_name"`
 	AvailableSchedules []ScheduleSlot `json:"available_schedules"`
 }
@@ -35,6 +37,7 @@ func ParseFromEntity(data Entity) (res Response) {
 		Rating:             *data.Rating,
 		Address:            *data.Address,
 		Phone:              *data.Phone,
+		PhotoURL:           *data.PhotoURL,
 		ClinicName:         *data.ClinicName,
 		AvailableSchedules: data.AvailableSchedules,
 	}

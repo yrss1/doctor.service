@@ -149,6 +149,7 @@ func (r *AppointmentRepository) ListByUserID(ctx context.Context, userID string)
 		d.name AS doctor_name,
 		d.specialization,
 		d.phone AS doctor_phone,
+		d.photo_url AS doctor_photo_url,
 		s.slot_start,
 		s.slot_end
 	FROM appointments a
