@@ -150,6 +150,7 @@ func (r *AppointmentRepository) ListByUserID(ctx context.Context, userID string)
 		d.specialization,
 		d.phone AS doctor_phone,
 		d.gender AS doctor_gender,
+		d.visit_type AS doctor_visit_type,
 		s.slot_start,
 		s.slot_end
 	FROM appointments a
@@ -214,5 +215,43 @@ func (r *AppointmentRepository) UpdateMeetingURL(ctx context.Context, id string,
 	log.LoggerFromContext(ctx).Info("meeting URL updated successfully",
 		zap.String("id", id),
 		zap.String("meeting_url", meetingURL))
+	return nil
+}
+
+func (r *AppointmentRepository) Complete(ctx context.Context, id string) (err error) {
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	var scheduleID string
+	getScheduleQuery := `SELECT schedule_id FROM appointments WHERE id = $1 AND status = 'active';`
+	if err = tx.GetContext(ctx, &scheduleID, getScheduleQuery, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return store.ErrorNotFound
+		}
+		return err
+	}
+
+	updateAppointment := `UPDATE appointments SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1;`
+	if _, err = tx.ExecContext(ctx, updateAppointment, id); err != nil {
+		return err
+	}
+
+	updateSchedule := `UPDATE schedule SET is_available = TRUE WHERE id = $1;`
+	if _, err = tx.ExecContext(ctx, updateSchedule, scheduleID); err != nil {
+		return err
+	}
+
 	return nil
 }

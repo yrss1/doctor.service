@@ -10,6 +10,7 @@ type Entity struct {
 	Address            *string        `json:"address" db:"address"`
 	Phone              *string        `json:"phone" db:"phone"`
 	Gender             *string        `json:"gender" db:"gender"`
+	VisitType          *string        `json:"visit_type" db:"visit_type"`
 	ClinicName         *string        `json:"clinic_name" db:"clinic_name"`
 	AvailableSchedules []ScheduleSlot `json:"available_schedules" db:"available_schedules"`
 }

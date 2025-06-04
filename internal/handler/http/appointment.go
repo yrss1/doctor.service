@@ -28,6 +28,7 @@ func (h *AppointmentHandler) Routes(r *gin.RouterGroup) {
 		api.POST("/", h.add)
 		api.GET("/:id", h.get)
 		api.GET("/cancel/:id", h.cancel)
+		api.GET("/complete/:id", h.complete)
 		api.GET("/user/:id", h.listByUserID)
 		api.PUT("/:id/meeting-url", h.updateMeetingURL)
 	}
@@ -106,6 +107,22 @@ func (h *AppointmentHandler) listByUserID(c *gin.Context) {
 	}
 
 	response.OK(c, res)
+}
+
+func (h *AppointmentHandler) complete(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := h.doctorservice.CompleteAppointmentByID(c.Request.Context(), id); err != nil {
+		switch {
+		case errors.Is(err, store.ErrorNotFound):
+			response.NotFound(c, err)
+		default:
+			response.InternalServerError(c, err)
+		}
+		return
+	}
+
+	response.OK(c, gin.H{"message": "Appointment completed successfully"})
 }
 
 type UpdateMeetingURLRequest struct {

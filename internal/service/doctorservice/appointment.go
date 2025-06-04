@@ -90,3 +90,14 @@ func (s *Service) UpdateAppointmentMeetingURL(ctx context.Context, id string, me
 
 	return nil
 }
+
+func (s *Service) CompleteAppointmentByID(ctx context.Context, id string) (err error) {
+	logger := log.LoggerFromContext(ctx).Named("CompleteAppointmentByID")
+
+	err = s.appointmentRepository.Complete(ctx, id)
+	if err != nil {
+		logger.Error("failed to complete appointment", zap.Error(err))
+	}
+
+	return
+}

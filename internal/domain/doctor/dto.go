@@ -10,6 +10,7 @@ type Request struct {
 	Address        *string  `json:"address"`
 	Phone          *string  `json:"phone"`
 	Gender         *string  `json:"gender"`
+	VisitType      *string  `json:"visit_type"`
 	ClinicName     *string  `json:"clinic_name"`
 }
 
@@ -23,6 +24,7 @@ type Response struct {
 	Address            string         `json:"address"`
 	Phone              string         `json:"phone"`
 	Gender             string         `json:"gender"`
+	VisitType          string         `json:"visit_type"`
 	ClinicName         string         `json:"clinic_name"`
 	AvailableSchedules []ScheduleSlot `json:"available_schedules"`
 }
@@ -38,6 +40,7 @@ func ParseFromEntity(data Entity) (res Response) {
 		Address:            *data.Address,
 		Phone:              *data.Phone,
 		Gender:             *data.Gender,
+		VisitType:          *data.VisitType,
 		ClinicName:         *data.ClinicName,
 		AvailableSchedules: data.AvailableSchedules,
 	}

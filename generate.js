@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	postgresDSN = "postgres://yera:6fVlBDvp3MvFTGWUvqjntY0CLIDs4LME@dpg-cvc7860gph6c73afj15g-a.frankfurt-postgres.render.com:5432/yera_8rds?sslmode=require"
+	postgresDSN = "postgres://shipager_user:udD4TT3yraudlmXidrNIS6tovbDRdeV6@dpg-d0lf7j3uibrs73a90j8g-a.frankfurt-postgres.render.com/shipager"
 	batchSize   = 1000
 )
 
@@ -31,7 +31,13 @@ func main() {
 		log.Fatalf("❌ Failed to generate schedules: %v", err)
 	}
 
-	fmt.Println("✅ Schedules generated successfully!")
+	// Обновляем уже прошедшие слоты — делаем их недоступными
+	err = markPastSlotsUnavailable(db)
+	if err != nil {
+		log.Fatalf("❌ Failed to mark past slots unavailable: %v", err)
+	}
+
+	fmt.Println("✅ Schedules generated and past slots updated successfully!")
 }
 
 // Тип слота
@@ -152,4 +158,14 @@ func joinWithComma(parts []string) string {
 		result += p
 	}
 	return result
+}
+
+func markPastSlotsUnavailable(db *sql.DB) error {
+	query := `
+		UPDATE schedule
+		SET is_available = FALSE
+		WHERE slot_end < NOW()
+	`
+	_, err := db.Exec(query)
+	return err
 }

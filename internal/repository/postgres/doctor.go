@@ -34,6 +34,7 @@ func (r *DoctorRepository) ListWithSchedules(ctx context.Context) ([]doctor.Enti
 		d.address,
 		d.phone,
 		d.gender,
+		d.visit_type,
 		c.name AS clinic_name,
 		COALESCE(json_agg(
 			json_build_object(
@@ -79,6 +80,7 @@ func (r *DoctorRepository) GetWithSchedules(ctx context.Context, id string) (doc
 		d.address,
 		d.phone,
 		d.gender,
+		d.visit_type,
 		c.name AS clinic_name,
 		COALESCE(json_agg(
 			json_build_object(
@@ -144,6 +146,7 @@ func (r *DoctorRepository) SearchWithSchedules(ctx context.Context, filter docto
 		d.address,
 		d.phone,
 		d.gender,
+		d.visit_type,
 		c.name AS clinic_name,
 		COALESCE(json_agg(
 			json_build_object(
@@ -197,6 +200,11 @@ func (r *DoctorRepository) prepareSearchArgs(data doctor.Entity) (sets []string,
 	if data.ClinicName != nil {
 		args = append(args, "%"+*data.ClinicName+"%")
 		sets = append(sets, fmt.Sprintf("c.name ILIKE $%d", len(args)))
+	}
+
+	if data.VisitType != nil {
+		args = append(args, *data.VisitType)
+		sets = append(sets, fmt.Sprintf("d.visit_type = $%d", len(args)))
 	}
 
 	return
