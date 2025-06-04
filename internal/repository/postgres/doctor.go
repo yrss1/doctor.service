@@ -33,7 +33,7 @@ func (r *DoctorRepository) ListWithSchedules(ctx context.Context) ([]doctor.Enti
 		d.rating,
 		d.address,
 		d.phone,
-		d.photo_url,
+		d.gender,
 		c.name AS clinic_name,
 		COALESCE(json_agg(
 			json_build_object(
@@ -78,7 +78,7 @@ func (r *DoctorRepository) GetWithSchedules(ctx context.Context, id string) (doc
 		d.rating,
 		d.address,
 		d.phone,
-		d.photo_url,
+		d.gender,
 		c.name AS clinic_name,
 		COALESCE(json_agg(
 			json_build_object(
@@ -143,7 +143,7 @@ func (r *DoctorRepository) SearchWithSchedules(ctx context.Context, filter docto
 		d.rating,
 		d.address,
 		d.phone,
-		d.photo_url,
+		d.gender,
 		c.name AS clinic_name,
 		COALESCE(json_agg(
 			json_build_object(
